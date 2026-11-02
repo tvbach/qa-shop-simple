@@ -9,7 +9,7 @@ test.describe("Mua hàng (UI)", () => {
     await page.getByLabel("Số lượng").fill("2");
     await page.getByRole("button", { name: "Thêm vào giỏ" }).click();
 
-    await expect(page.getByRole("status")).toContainText("Đã thêm 2 × Chuột không dây");
+    await expect(page.getByRole("main").getByRole("status")).toContainText("Đã thêm 2 × Chuột không dây");
     await expect(page.getByTestId("cart-count")).toHaveText("2");
   });
 

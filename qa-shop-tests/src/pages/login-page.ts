@@ -11,7 +11,9 @@ export class LoginPage {
     this.email = page.getByLabel("Email");
     this.password = page.getByLabel("Mật khẩu");
     this.submit = page.getByRole("button", { name: "Đăng nhập" });
-    this.formError = page.getByRole("alert");
+    // Giới hạn trong <main>: Next.js tự chèn một phần tử role="alert" ẩn (route announcer)
+    // ở ngoài nội dung trang, nên getByRole("alert") toàn trang sẽ khớp 2 phần tử.
+    this.formError = page.getByRole("main").getByRole("alert");
   }
 
   async goto(next?: string) {
