@@ -259,7 +259,13 @@ export function buildOpenApi() {
         Health: {
           type: "object",
           required: ["status", "version", "apiVersion", "storage"],
-          properties: { status: { const: "ok" }, version: { type: "string" }, apiVersion: { type: "string" }, storage: { enum: ["memory", "redis"] } },
+          properties: {
+            status: { const: "ok" },
+            version: { type: "string" },
+            apiVersion: { type: "string" },
+            storage: { enum: ["memory", "redis"] },
+            warning: { type: "string", description: "Chỉ có khi cấu hình lưu trữ không phù hợp với môi trường chạy" },
+          },
         },
         Category: { type: "string", enum: ["books", "electronics", "accessories"] },
         User: {
