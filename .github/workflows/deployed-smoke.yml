@@ -1,0 +1,56 @@
+name: Deployed smoke (production)
+
+# "Shift-right": sau khi Vercel deploy production xong, chạy bộ test API của
+# qa-shop-tests vào chính bản đang chạy online. Cần biến repository QA_SHOP_URL
+# (Settings → Secrets and variables → Actions → Variables), ví dụ https://qa-shop-simple.vercel.app
+on:
+  deployment_status:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deployed-smoke
+  cancel-in-progress: true
+
+jobs:
+  api-smoke:
+    name: API tests against production
+    if: >-
+      vars.QA_SHOP_URL != '' &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      QA_SHOP_URL: ${{ vars.QA_SHOP_URL }}
+    defaults:
+      run:
+        working-directory: qa-shop-tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Health check (phải dùng Redis, không có cảnh báo)
+        run: |
+          body=$(curl -fsS "$QA_SHOP_URL/api/health")
+          echo "$body"
+          echo "$body" | grep -q '"storage":"redis"' || { echo "::error::Production chưa dùng Redis"; exit 1; }
+          if echo "$body" | grep -q '"warning"'; then echo "::error::Health có cảnh báo cấu hình"; exit 1; fi
+
+      - name: Install
+        run: if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi
+
+      - name: Run API tests
+        run: npx playwright test --project=api
+
+      - name: Upload report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployed-smoke-report
+          path: qa-shop-tests/playwright-report/
+          retention-days: 7

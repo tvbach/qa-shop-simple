@@ -57,6 +57,16 @@ describe("System", () => {
   it("health trả version và loại storage", async () => {
     const body = await (await health()).json();
     expect(body).toMatchObject({ status: "ok", storage: "memory" });
+    expect(body).not.toHaveProperty("warning");
+  });
+
+  it("health cảnh báo khi chạy trên Vercel mà chưa có Redis", async () => {
+    process.env.VERCEL = "1";
+    try {
+      expect((await (await health()).json()).warning).toContain("Redis");
+    } finally {
+      delete process.env.VERCEL;
+    }
   });
 
   it("OpenAPI 3.1 liệt kê mọi endpoint chính", async () => {

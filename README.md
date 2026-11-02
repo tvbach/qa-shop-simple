@@ -21,6 +21,15 @@ cd qa-shop-tests && npm install && npx playwright install chromium
 npm test                            # QA_SHOP_URL mặc định http://localhost:3000
 ```
 
+## Deploy miễn phí (Vercel + Upstash Redis)
+
+1. Vercel → **Add New → Project** → import `qa-shop-simple`. **Root Directory: `qa-shop`**, Framework: Next.js. Production Branch: `main`.
+2. Trong project: **Storage → Upstash → Redis** → tạo database **mới, chỉ dùng cho QA Shop** → Connect. Vercel tự thêm `KV_REST_API_URL` và `KV_REST_API_TOKEN`.
+3. **Redeploy**, mở `/api/health`: phải thấy `"storage":"redis"` và không có `warning`.
+4. GitHub → Settings → Secrets and variables → Actions → **Variables** → thêm `QA_SHOP_URL` = URL production. Từ đó mỗi lần deploy production xong, workflow *Deployed smoke* tự chạy bộ test API vào bản online.
+
+Lưu ý khi test bản online: dữ liệu theo session hết hạn sau 24 giờ không dùng; giới hạn 600 request/phút cho mỗi IP; Upstash free có hạn mức lệnh mỗi tháng — chạy suite lớn thường xuyên thì nên chạy QA Shop ở local hoặc Docker.
+
 ## Những điều cần biết khi viết test
 
 - **Mỗi test một session riêng.** Gửi header `X-Session-Id` (API) hoặc cookie `qa_session` (trình duyệt) — mỗi session có dữ liệu riêng (sản phẩm, tồn kho, giỏ, đơn hàng), nên test chạy song song không ảnh hưởng nhau và không cần dọn dữ liệu. Fixture trong `qa-shop-tests` đã làm sẵn việc này.
