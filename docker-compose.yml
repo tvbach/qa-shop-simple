@@ -1,0 +1,9 @@
+services:
+  qa-shop:
+    build: ./qa-shop
+    ports:
+      - "3000:3000"
+    environment:
+      # Bỏ comment để tắt giới hạn tần suất khi chạy suite lớn ở local
+      # RATE_LIMIT: "off"
+      RATE_LIMIT_PER_MINUTE: "600"
